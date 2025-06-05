@@ -65,6 +65,34 @@ app.post("/api/transactions", async (req, res) => {
     }
 })
 
+app.delete("/api/transactions/:id", async (req, res) => {
+    const { id } = req.params;
+
+    if (!id) {
+        return res.status(400).json({error: "Transaction ID is required"});
+    }
+
+    if (isNaN(parseInt (id))) {
+        return res.status(400).json({ error: "Invalid transaction ID" });
+    }
+
+    try {
+        const result = await sql`
+        DELETE FROM transactions WHERE id = ${id}
+        RETURNING *`
+
+        if (result.length === 0) {
+            return res.status(404).json({ error: "Transaction not found" });
+        }
+
+        res.status(200).json({ message: "Transaction deleted successfully", transaction: result[0] });
+
+    } catch (error) {
+        console.error("Error deleting transaction:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+})
+
 
 
 initDB().then(() => {
