@@ -93,6 +93,39 @@ app.delete("/api/transactions/:id", async (req, res) => {
     }
 })
 
+app.get("/api/transactions/summary/:userId", async (req, res) => {
+    const { userId } = req.params;
+
+    if (!userId) {
+        return res.status(400).json({ error: "User ID is required" });
+    }
+
+    try {
+        const balanceResult = await sql`
+        SELECT COALESCE(SUM(amount), 0) AS balance FROM transactions WHERE userId = ${userId}
+        `
+
+        const incomeResult = await sql`
+        SELECT COALESCE(SUM(amount), 0) AS income FROM transactions WHERE userId = ${userId} AND amount > 0
+        `
+
+        const expensesResult = await sql`
+        SELECT COALESCE(SUM(amount), 0) AS expenses FROM transactions WHERE userId = ${userId} AND amount < 0
+        `
+
+        res.status(200).json({
+            balance: parseFloat(balanceResult[0].balance),
+            income: parseFloat(incomeResult[0].income),
+            expenses: parseFloat(expensesResult[0].expenses)
+        });
+
+    } catch (error) {
+        console.error("Error fetching transaction summary:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+
+})
+
 
 
 initDB().then(() => {
