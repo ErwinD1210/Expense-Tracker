@@ -28,6 +28,23 @@ async function initDB() {
     }
 };
 
+app.get("/api/transactions/:userId", async (req, res) => {
+    const { userId } = req.params;
+
+    if (!userId) {
+        return res.status(400).json({error: "User ID is required"});
+    }
+
+    try {
+        const transactions = await sql`
+        SELECT * FROM transactions WHERE userId = ${userId} ORDER BY createdAt DESC`
+        res.status(200).json(transactions);
+    } catch (error) {
+        console.error("Error fetching transactions:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+})
+
 app.post("/api/transactions", async (req, res) => {
     const { userId, title, amount, category } = req.body;
 
@@ -48,7 +65,7 @@ app.post("/api/transactions", async (req, res) => {
     }
 })
 
-console.log("My port: ", process.env.PORT);
+
 
 initDB().then(() => {
     app.listen(PORT, () => {
