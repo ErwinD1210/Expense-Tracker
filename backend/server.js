@@ -1,11 +1,13 @@
 import express from "express";
 import dotenv from "dotenv";
 import { sql } from "./config/db.js";
+import rateLimiter from "./middleware/rateLimiter.js";
 
 dotenv.config();
 
 const app = express();
 
+app.use(rateLimiter)
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
@@ -125,8 +127,6 @@ app.get("/api/transactions/summary/:userId", async (req, res) => {
     }
 
 })
-
-
 
 initDB().then(() => {
     app.listen(PORT, () => {
